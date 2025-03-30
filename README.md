@@ -85,34 +85,52 @@ Replace `/ABSOLUTE/PATH/TO/` with the actual path to where you cloned the reposi
 
 ### Screen Capture
 
-- `capture_screen`: Capture the entire screen as an image
-- `capture_region`: Capture a specific region of the screen
+- `capture_screen`: Capture the entire screen as an image. Supports `format` (png/jpeg) and `quality` (jpeg only) parameters.
+- `capture_region`: Capture a specific region of the screen. Requires `left`, `top`, `width`, `height`. Supports `format` and `quality`.
+- `get_screen_size`: Get the dimensions (width and height) of the screen.
 
 ### Mouse Control
 
-- `move_mouse`: Move the mouse cursor to a specific position
-- `click_mouse`: Click the mouse at the current position or specified coordinates
-- `double_click`: Double-click at the current position or specified coordinates
-- `right_click`: Right-click at the current position or specified coordinates
-- `scroll_mouse`: Scroll the mouse wheel up or down
+- `move_mouse`: Move the mouse cursor to a specific `x`, `y` position.
+- `get_mouse_position`: Get the current `x`, `y` position of the mouse cursor.
+- `click_mouse`: Click the mouse at the current position. Optional `button` (left, middle, right).
+- `click_at`: Click the mouse at a specific `x`, `y` position. Optional `button`.
+- `double_click`: Double-click the mouse at the current position.
+- `double_click_at`: Double-click the mouse at a specific `x`, `y` position.
+- `scroll_mouse`: Scroll the mouse wheel. Requires `direction` (up/down). Optional `amount`.
+- `drag_mouse`: Drag the mouse from the current position to a target `x`, `y` position.
+- `drag_mouse_from_to`: Drag the mouse from a `startX`, `startY` position to an `endX`, `endY` position.
 
 ### Keyboard Input
 
-- `type_text`: Type text at the current cursor position
-- `press_key`: Press a specific keyboard key or key combination
-- `hold_key`: Hold down a key
-- `release_key`: Release a held key
-
-### Window Management
-
-- `find_window`: Find a window by title or application name
-- `focus_window`: Bring a window to the foreground
-- `get_active_window`: Get information about the currently active window
+- `type_text`: Type text at the current cursor position. Requires `text`.
+- `type_text_with_delay`: Type text with a delay between keystrokes. Requires `text`. Optional `delayMs`.
+- `press_key`: Press a specific keyboard key. Requires `key`.
+- `press_key_shortcut`: Press a keyboard shortcut (combination of keys). Requires `keys` array.
+- `hold_key`: Hold down a keyboard key. Requires `key`.
+- `release_key`: Release a held keyboard key. Requires `key`.
 
 ### Clipboard Operations
 
-- `copy_to_clipboard`: Copy text to the clipboard
-- `paste_from_clipboard`: Get text from the clipboard
+- `get_clipboard_text`: Get text from the clipboard.
+- `set_clipboard_text`: Set text to the clipboard. Requires `text`.
+- `copy_selected_text`: Copy selected text to clipboard and return it (uses Ctrl+C/Cmd+C).
+- `paste_text`: Paste text at current cursor position (uses Ctrl+V/Cmd+V). Requires `text`.
+- `get_clipboard_image`: Get image from the clipboard (if available) as base64 data.
+
+### UI Automation Tools (Windows Only)
+
+These tools use Windows UI Automation via PowerShell to interact with UI elements.
+
+- `get_ui_element_info`: Finds a UI element within a specified window and returns its properties (Name, AutomationId, ClassName, ControlType, BoundingRectangle, IsEnabled, IsOffscreen, Value, Children).
+  - Requires `windowTitle` (can be partial match).
+  - Requires at least one of `elementName`, `automationId`, or `className` to find a specific element.
+  - If no element identifier is provided, it lists the direct children of the window.
+- `invoke_ui_element_action`: Performs an action on a specified UI element.
+  - Requires `windowTitle`.
+  - Requires `action` (`Click`, `SetValue`, or `Focus`).
+  - Requires at least one of `elementName`, `automationId`, or `className`.
+  - Requires `valueToSet` (string) if `action` is `SetValue`.
 
 ## Development
 
