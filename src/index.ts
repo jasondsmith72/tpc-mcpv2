@@ -1,7 +1,10 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js"; // Correct import path
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import * as tools from "./tools/index.js";
+// Import specific input types for UI Automation tools
+import { GetUiElementInfoInput, InvokeUiElementActionInput } from "./tools/uiAutomation.js";
 import { CaptureFormat, Key, MouseButton, Point, Region, ScrollDirection } from "./types.js";
 
 // Create the MCP server instance
@@ -20,14 +23,12 @@ server.tool(
   },
   async ({ format, quality }) => {
     try {
-      // Pass format and quality parameters to the tool function
-      const imageBase64 = await tools.captureScreen(format, quality); 
-      // imageBase64 now includes the filename and prefix
+      const imageBase64 = await tools.captureScreen(format, quality);
       return {
         content: [
           {
             type: "text",
-            text: `Screen captured successfully. ${imageBase64}`, 
+            text: `Screen captured successfully. ${imageBase64}`,
           },
         ],
       };
@@ -37,7 +38,6 @@ server.tool(
         content: [
           {
             type: "text",
-            // Return the detailed error message and stack trace
             text: `Error capturing screen: ${error instanceof Error ? error.message : String(error)}\nStack: ${error instanceof Error ? error.stack : 'No stack trace available'}`,
           },
         ],
@@ -60,8 +60,7 @@ server.tool(
   async ({ left, top, width, height, format, quality }) => {
     try {
       const region: Region = { left, top, width, height };
-      const imageBase64 = await tools.captureRegion(region, format, quality); // Pass quality
-      // imageBase64 now includes the filename and prefix
+      const imageBase64 = await tools.captureRegion(region, format, quality);
       return {
         content: [
           {
@@ -76,7 +75,6 @@ server.tool(
         content: [
           {
             type: "text",
-            // Return the detailed error message and stack trace
             text: `Error capturing screen region: ${error instanceof Error ? error.message : String(error)}\nStack: ${error instanceof Error ? error.stack : 'No stack trace available'}`,
           },
         ],
@@ -714,20 +712,145 @@ server.tool(
   }
 );
 
+server.tool(
+  "get_clipboard_image",
+  "Get image from the clipboard (if available) as base64 data",
+  {}, // No input parameters needed
+  async () => {
+    try {
+      const base64Image = await tools.getClipboardImage();
+      if (base64Image) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Clipboard image retrieved successfully. Image data: ${base64Image}`,
+            },
+          ],
+        };
+      } else {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "No image found on the clipboard.",
+            },
+          ],
+        };
+      }
+    } catch (error) {
+      return {
+        isError: true,
+        content: [
+          {
+            type: "text",
+            text: `Error getting clipboard image: ${error instanceof Error ? error.message : String(error)}\nStack: ${error instanceof Error ? error.stack : 'No stack trace available'}`,
+          },
+        ],
+      };
+    }
+  }
+);
+
+// Register UI Automation tools
+// Note: These tools execute PowerShell scripts using .NET UI Automation
+server.tool(
+  tools.getUiElementInfoTool.name,
+  tools.getUiElementInfoTool.description,
+  // Define schema inline using Zod types
+  {
+    windowTitle: z.string().min(1, 'Window title must be provided'),
+    elementName: z.string().optional(),
+    automationId: z.string().optional(),
+    className: z.string().optional(),
+    // Note: Refinement for requiring at least one identifier is handled by the PS script
+  },
+  async (input: GetUiElementInfoInput) => {
+    try {
+      // Call the execute function from the imported tool object
+      const resultJson = await tools.getUiElementInfoTool.execute(input);
+      return {
+        content: [{ type: "text", text: resultJson }],
+      };
+    } catch (error: unknown) { // Add type annotation
+      // Handle McpError specifically if thrown by the tool's execute
+      if (error instanceof McpError) {
+        return {
+          isError: true,
+          content: [{ type: "text", text: `Error getting UI element info: ${error.message}` }],
+        };
+      }
+      // Handle generic errors
+      return {
+        isError: true,
+        content: [
+          {
+            type: "text",
+            text: `Unexpected error getting UI element info: ${error instanceof Error ? error.message : String(error)}`,
+          },
+        ],
+      };
+    }
+  }
+);
+
+server.tool(
+  tools.invokeUiElementActionTool.name,
+  tools.invokeUiElementActionTool.description,
+  // Define schema inline using Zod types
+  {
+    windowTitle: z.string().min(1, 'Window title must be provided'),
+    action: z.enum(['Click', 'SetValue', 'Focus']),
+    elementName: z.string().optional(),
+    automationId: z.string().optional(),
+    className: z.string().optional(),
+    valueToSet: z.string().optional(),
+    // Note: Refinements for identifier and valueToSet are handled by the PS script
+  },
+  async (input: InvokeUiElementActionInput) => {
+    try {
+      // Call the execute function from the imported tool object
+      const resultMessage = await tools.invokeUiElementActionTool.execute(input);
+      return {
+        content: [{ type: "text", text: resultMessage }],
+      };
+    } catch (error: unknown) { // Add type annotation
+      // Handle McpError specifically
+      if (error instanceof McpError) {
+        return {
+          isError: true,
+          content: [{ type: "text", text: `Error invoking UI element action: ${error.message}` }],
+        };
+      }
+      // Handle generic errors
+      return {
+        isError: true,
+        content: [
+          {
+            type: "text",
+            text: `Unexpected error invoking UI element action: ${error instanceof Error ? error.message : String(error)}`,
+          },
+        ],
+      };
+    }
+  }
+);
+
+
 // Run the server
 async function main() {
   try {
     console.error("Starting Total PC Control MCP server...");
-    
+
     // Initialize nut.js settings
     // screen settings go here if needed
-    
+
     // Create transport
     const transport = new StdioServerTransport();
-    
+
     // Connect server to transport
     await server.connect(transport);
-    
+
     console.error("Total PC Control MCP server running");
   } catch (error) {
     console.error("Fatal error:", error);

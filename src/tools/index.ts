@@ -13,3 +13,6 @@ export * from "./keyboard.js";
 
 // Clipboard tools
 export * from "./clipboard.js";
+
+// UI Automation tools
+export * from "./uiAutomation.js";
