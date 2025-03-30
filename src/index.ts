@@ -16,15 +16,18 @@ server.tool(
   "Capture the entire screen as an image",
   {
     format: z.enum([CaptureFormat.PNG, CaptureFormat.JPEG]).optional().describe("Image format (png or jpeg)"),
+    quality: z.number().int().min(1).max(100).optional().describe("JPEG quality (1-100, default: 80)"),
   },
-  async ({ format }) => {
+  async ({ format, quality }) => {
     try {
-      const imageBase64 = await tools.captureScreen(format);
+      // Pass format and quality parameters to the tool function
+      const imageBase64 = await tools.captureScreen(format, quality); 
+      // imageBase64 now includes the filename and prefix
       return {
         content: [
           {
             type: "text",
-            text: `Screen captured successfully. Image data: data:image/${format || CaptureFormat.PNG};base64,${imageBase64}`,
+            text: `Screen captured successfully. ${imageBase64}`, 
           },
         ],
       };
@@ -34,7 +37,8 @@ server.tool(
         content: [
           {
             type: "text",
-            text: `Error capturing screen: ${error instanceof Error ? error.message : String(error)}`,
+            // Return the detailed error message and stack trace
+            text: `Error capturing screen: ${error instanceof Error ? error.message : String(error)}\nStack: ${error instanceof Error ? error.stack : 'No stack trace available'}`,
           },
         ],
       };
@@ -51,16 +55,18 @@ server.tool(
     width: z.number().int().min(1).describe("Width of the region in pixels"),
     height: z.number().int().min(1).describe("Height of the region in pixels"),
     format: z.enum([CaptureFormat.PNG, CaptureFormat.JPEG]).optional().describe("Image format (png or jpeg)"),
+    quality: z.number().int().min(1).max(100).optional().describe("JPEG quality (1-100, default: 80)"),
   },
-  async ({ left, top, width, height, format }) => {
+  async ({ left, top, width, height, format, quality }) => {
     try {
       const region: Region = { left, top, width, height };
-      const imageBase64 = await tools.captureRegion(region, format);
+      const imageBase64 = await tools.captureRegion(region, format, quality); // Pass quality
+      // imageBase64 now includes the filename and prefix
       return {
         content: [
           {
             type: "text",
-            text: `Screen region captured successfully. Image data: data:image/${format || CaptureFormat.PNG};base64,${imageBase64}`,
+            text: `Screen region captured successfully. ${imageBase64}`,
           },
         ],
       };
@@ -70,7 +76,8 @@ server.tool(
         content: [
           {
             type: "text",
-            text: `Error capturing screen region: ${error instanceof Error ? error.message : String(error)}`,
+            // Return the detailed error message and stack trace
+            text: `Error capturing screen region: ${error instanceof Error ? error.message : String(error)}\nStack: ${error instanceof Error ? error.stack : 'No stack trace available'}`,
           },
         ],
       };

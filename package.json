@@ -33,7 +33,9 @@
   "homepage": "https://github.com/jasondsmith72/total-pc-control#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.3.1",
-    "@nut-tree/nut-js": "^3.0.0",
+    "@nut-tree-fork/nut-js": "^4.2.6",
+    "@types/sharp": "^0.31.1",
+    "sharp": "^0.33.5",
     "zod": "^3.22.0"
   },
   "devDependencies": {

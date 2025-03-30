@@ -1,4 +1,4 @@
-import { clipboard } from "@nut-tree/nut-js";
+import { clipboard } from "@nut-tree-fork/nut-js";
 import { copyToClipboard, pasteFromClipboard } from "./keyboard.js";
 
 /**

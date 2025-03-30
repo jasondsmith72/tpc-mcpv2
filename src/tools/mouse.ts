@@ -1,4 +1,4 @@
-import { mouse, screen } from "@nut-tree/nut-js";
+import { mouse, screen, Button } from "@nut-tree-fork/nut-js"; // Import Button enum
 import { MouseButton, Point, ScrollDirection } from "../types.js";
 
 /**
@@ -8,9 +8,10 @@ import { MouseButton, Point, ScrollDirection } from "../types.js";
 export async function moveMouse(position: Point): Promise<void> {
   try {
     // Validate that coordinates are within screen bounds
-    const screenSize = { width: screen.width, height: screen.height };
-    if (position.x < 0 || position.x > screenSize.width || position.y < 0 || position.y > screenSize.height) {
-      throw new Error(`Coordinates out of bounds. Screen size is ${screenSize.width}x${screenSize.height}`);
+    const screenWidth = await screen.width(); // Await the async method
+    const screenHeight = await screen.height(); // Await the async method
+    if (position.x < 0 || position.x > screenWidth || position.y < 0 || position.y > screenHeight) {
+      throw new Error(`Coordinates out of bounds. Screen size is ${screenWidth}x${screenHeight}`);
     }
     
     // Move the mouse
@@ -47,7 +48,7 @@ export async function clickMouse(button: MouseButton = MouseButton.LEFT): Promis
     if (button === MouseButton.LEFT) {
       await mouse.leftClick();
     } else if (button === MouseButton.MIDDLE) {
-      await mouse.middleClick();
+      await mouse.click(Button.MIDDLE); // Use mouse.click with Button enum
     } else if (button === MouseButton.RIGHT) {
       await mouse.rightClick();
     } else {
@@ -82,7 +83,7 @@ export async function clickMouseAt(position: Point, button: MouseButton = MouseB
  */
 export async function doubleClick(): Promise<void> {
   try {
-    await mouse.doubleClick();
+    await mouse.doubleClick(Button.LEFT); // Pass Button.LEFT to doubleClick
   } catch (error) {
     console.error("Error double-clicking mouse:", error);
     throw new Error("Failed to double-click mouse");
@@ -136,17 +137,17 @@ export async function dragMouse(target: Point): Promise<void> {
     const current = await getMousePosition();
     
     // Press mouse button down at current position
-    await mouse.pressButton(mouse.Button.LEFT);
+    await mouse.pressButton(Button.LEFT); // Use imported Button enum
     
     // Move to target position
     await moveMouse(target);
     
     // Release mouse button
-    await mouse.releaseButton(mouse.Button.LEFT);
+    await mouse.releaseButton(Button.LEFT); // Use imported Button enum
   } catch (error) {
     // If anything fails, make sure mouse button is released
     try {
-      await mouse.releaseButton(mouse.Button.LEFT);
+      await mouse.releaseButton(Button.LEFT); // Use imported Button enum
     } catch (releaseError) {
       // Ignore release error
     }
@@ -167,17 +168,17 @@ export async function dragMouseFromTo(start: Point, end: Point): Promise<void> {
     await moveMouse(start);
     
     // Press mouse button down
-    await mouse.pressButton(mouse.Button.LEFT);
+    await mouse.pressButton(Button.LEFT); // Use imported Button enum
     
     // Move to end position
     await moveMouse(end);
     
     // Release mouse button
-    await mouse.releaseButton(mouse.Button.LEFT);
+    await mouse.releaseButton(Button.LEFT); // Use imported Button enum
   } catch (error) {
     // If anything fails, make sure mouse button is released
     try {
-      await mouse.releaseButton(mouse.Button.LEFT);
+      await mouse.releaseButton(Button.LEFT); // Use imported Button enum
     } catch (releaseError) {
       // Ignore release error
     }
